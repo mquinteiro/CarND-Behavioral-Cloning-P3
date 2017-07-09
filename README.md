@@ -4,37 +4,19 @@
 
 Overview
 ---
-This repository contains starting files for the Behavioral Cloning Project.
+This repository contains the results files for the Behavioral Cloning Project.
 
-In this project, you will use what you've learned about deep neural networks and convolutional neural networks to clone driving behavior. You will train, validate and test a model using Keras. The model will output a steering angle to an autonomous vehicle.
+The goals of the project is to use what I've learned about deep neural networks and convolutional neural networks to clone driving behavior. I will train, validate and test a model using Keras. The model will output a steering angle to an autonomous vehicle.
 
-We have provided a simulator where you can steer a car around a track for data collection. You'll use image data and steering angles to train a neural network and then use this model to drive the car autonomously around the track.
+With simulator I steer a car around a track for data collection that will be used to train the model and then use it to drive the car autonomously around the track.
 
-We also want you to create a detailed writeup of the project. Check out the [writeup template](https://github.com/udacity/CarND-Behavioral-Cloning-P3/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup. The writeup can be either a markdown file or a pdf document.
+**Behavioral Cloning Project**
 
-To meet specifications, the project will require submitting five files: 
-* model.py (script used to create and train the model)
-* drive.py (script to drive the car - feel free to modify this file)
-* model.h5 (a trained Keras model)
-* a report writeup file (either markdown or pdf)
-* video.mp4 (a video recording of your vehicle driving autonomously around the track for at least one full lap)
-
-This README file describes how to output the video in the "Details About Files In This Directory" section.
-
-Creating a Great Writeup
----
-A great writeup should include the [rubric points](https://review.udacity.com/#!/rubrics/432/view) as well as your description of how you addressed each point.  You should include a detailed description of the code used (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
-
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
-
-The Project
----
 The goals / steps of this project are the following:
-* Use the simulator to collect data of good driving behavior 
-* Design, train and validate a model that predicts a steering angle from image data
-* Use the model to drive the vehicle autonomously around the first track in the simulator. The vehicle should remain on the road for an entire loop around the track.
+* Use the simulator to collect data of good driving behavior
+* Build, a convolution neural network in Keras that predicts steering angles from images
+* Train and validate the model with a training and validation set
+* Test that the model successfully drives around track one without leaving the road
 * Summarize the results with a written report
 
 ### Dependencies
@@ -51,68 +33,89 @@ The following resources can be found in this github repository:
 
 The simulator can be downloaded from the classroom. In the classroom, we have also provided sample data that you can optionally use to help train your model.
 
-## Details About Files In This Directory
+### Collecting data
 
-### `drive.py`
+For collect the ground truth of the project we use the simulator, we have train several
+situations, along the project we collect some data. The steps was:
 
-Usage of `drive.py` requires you have saved the trained model as an h5 file, i.e. `model.h5`. See the [Keras documentation](https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model) for how to create this file using the following command:
-```sh
-model.save(filepath)
-```
+1. Normal 1 lap to main circuit.
+2. 2 additional labs to get more information
+3. 2 laps in clockwise direction
+4. some small records to parts of the circuit where the driving fails like:
+  * bridge, from the sides to recover the center.
+  * in the sand exit, looks like the car likes the fields.
+  * last curve, the car likes to swim.
 
-Once the model has been saved, it can be used with drive.py using this command:
+### Processing dataset
 
-```sh
-python drive.py model.h5
-```
+For a better performance of the nets I have:
 
-The above command will load the trained model and use the model to make predictions on individual images in real-time and send the predicted angle back to the server via a websocket connection.
+1. Removed, as suggested, the top of the images and the bottom.
+2. Normalized the images adding a layer to the network that transform the values 0-255 to a range of -0.5 to 0.5
+  ` Lambda(lambda x:x/255.0 - 0.5,input_shape=(160,320,3)`
+3. Manipulate the original dataset to normalize the distribution of the steering well
 
-Note: There is known local system's setting issue with replacing "," with "." when using drive.py. When this happens it can make predicted steering values clipped to max/min values. If this occurs, a known fix for this is to add "export LANG=en_US.utf8" to the bashrc file.
+Originally the distribution of the data was:
 
-#### Saving a video of the autonomous agent
+[image1]: ./initialLabels.png "Initial data"
+![Original Angles][image1]
 
-```sh
-python drive.py model.h5 run1
-```
+In this histogram we can see a hi unbalance data between 0 and the other possibilities.
+To avoid this situation I've removed some of the 0angel images.
 
-The fourth argument, `run1`, is the directory in which to save the images seen by the agent. If the directory already exists, it'll be overwritten.
+After removing the 0's the situation was:
 
-```sh
-ls run1
+[image2]: ./reduce0s.png "Initial data"
+![Removing zeros][image2]
 
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_424.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_451.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_477.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_528.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_573.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_618.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_697.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_723.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_749.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_817.jpg
-...
-```
+As we can see in this distribution it is unbalanced left. So we introduce Mirroring, with
+this results
 
-The image file name is a timestamp of when the image was seen. This information is used by `video.py` to create a chronological video of the agent driving.
+[image3]: ./symmetric.png "Initial data"
+![Flipping images][image3]
 
-### `video.py`
+We still seeing a bit of unbalanced left distribution, so we drive in clockwise direction
 
-```sh
-python video.py run1
-```
+[image4]: ./clock-wise.png "Initial data"
+![clockwise driving][image4]
 
-Creates a video based on images found in the `run1` directory. The name of the video will be the name of the directory followed by `'.mp4'`, so, in this case the video will be `run1.mp4`.
 
-Optionally, one can specify the FPS (frames per second) of the video:
 
-```sh
-python video.py run1 --fps 48
-```
+### Data augmentation
 
-Will run the video at 48 FPS. The default FPS is 60.
+To obtain additional data we have use several ideas.
 
-#### Why create a video
+1. I have used both lateral cameras to have the tendency to correct the path in order to
+go to the center. We have test several times with a very simple network to train quick
+different angles, as bigger is the correction faster and uncontrolled is the answers
+2. Mirroring all images and inverting the steering angels to augment situations and data.
 
-1. It's been noted the simulator might perform differently based on the hardware. So if your model drives succesfully on your machine it might not on another machine (your reviewer). Saving a video is a solid backup in case this happens.
-2. You could slightly alter the code in `drive.py` and/or `video.py` to create a video of what your model sees after the image is processed (may be helpful for debugging).
+
+### Neural Network  Architecture.
+
+Initially we use a single dense layer with 128 neurons to test quick, but it is very
+inefficient running out everitime.
+
+After that I've try a convolutional network this architecture.
+
+| Layer | params |
+|---|---|
+|Conv2D | kernel(6,6) deep 6, acctivation relu |
+|Conv2D | kernel(6,6) deep 6, acctivation relu |
+|MaxPool2D | |
+| Dropout 20%||
+|Flatten||
+| Dropout 20%||
+|Dense |128 neurons|
+| Dropout 20%||
+|Dense |84 neurons|
+| Dropout 20%||
+|Dense |1 neurons|
+
+It works!!! But only in one direction, in clockwise. In anticlockwise, the default direction, the car miss the intersection and goes by the sand road.
+
+I can do tree tactics to avoid the problem.
+Try to make more epochs (it doesn't work), make more training data with this information,
+of change the network.
+
+My first try was add an additional convolutional layer, and it works!
