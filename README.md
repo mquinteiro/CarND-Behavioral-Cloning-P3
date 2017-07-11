@@ -80,6 +80,11 @@ We still seeing a bit of unbalanced left distribution, so we drive in clockwise 
 ![clockwise driving][image4]
 
 
+In a second stage I repeat the training but using the mouse, with the mouse the movements
+are smoother but there is less zeros, so I cut values between -0.04 and 0.04.
+
+
+
 
 ### Data augmentation
 
@@ -112,10 +117,16 @@ After that I've try a convolutional network this architecture.
 | Dropout 20%||
 |Dense |1 neurons|
 
-It works!!! But only in one direction, in clockwise. In anticlockwise, the default direction, the car miss the intersection and goes by the sand road.
+It works!!! But only in one direction, in clockwise. In anticlockwise, the default direction, the car miss the intersection and goes by the sand road. The recorded images can [see it here](https://github.com/mquinteiro/CarND-Behavioral-Cloning-P3/blob/master/CCMFdDdDdD-I.mp4)
+
 
 I can do tree tactics to avoid the problem.
 Try to make more epochs (it doesn't work), make more training data with this information,
 of change the network.
 
-My first try was add an additional convolutional layer, and it works!
+My first try was add an additional convolution layer, and it works, but just one time, so it is not strong enough!
+
+Next steeps was to try different combinations of the convolutional layers with different
+dropouts,
+
+The last try has [NVidea model proposed here](https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/)
