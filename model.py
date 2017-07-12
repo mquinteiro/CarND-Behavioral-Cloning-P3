@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import tensorflow as tf
 import numpy as np
+
+print("Loading keras...")
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda, MaxPool2D, Cropping2D, Dropout
 from keras.layers.convolutional import Conv2D
@@ -11,6 +13,8 @@ from keras.layers.normalization import BatchNormalization
 import random
 
 DATA_PATH = "/home/mquinteiro/proyectos/"
+
+#the image loading and augment augmentation
 def loadImages(path,correction=0.2):
     print("Loading images...")
 
@@ -19,16 +23,24 @@ def loadImages(path,correction=0.2):
     measurements = []
     with open(path + 'driving_log.csv') as csvfile:
         reader = csv.reader(csvfile)
+        #for each line we will use both side cameras and
+        #drop some images to mormalize the distribucions of steering well angles.
         for line in reader:
             lines.append(line)
 
             if abs(float(line[3]))<=0.04:
+                #all of 6 but one "almous strigth images
+                #are droped.
                 if random.randint(0,6)==0:
-
+                    #for the one that is not droped we save the
+                    #angle
                     measurements.append(float(line[3]))
+                    #and the inversed angle
                     measurements.append(-float(line[3]))
+                    #as well as image
                     image = cv2.imread(line[0])
                     images.append(image)
+                    #and flipped image.
                     images.append(np.fliplr(image))
 
             #the value of correction define how aggresive the movemet will be.
@@ -55,6 +67,7 @@ def loadImages(path,correction=0.2):
             images.append(np.fliplr(image3))
     return np.array(images), np.array(measurements)
 
+#this function is a wrapper to select witch architecture we will use.
 def defineDriver(model='MQ'):
     if model=='MQ' :
         modelF = mqModel
@@ -66,8 +79,10 @@ def defineDriver(model='MQ'):
 
     return modelF()
 
+
+#My own architecture, at the end NVidia works better... surprising :)
 def mqModel():
-    print("Loading keras...")
+
     print("Creating the model...")
 
     model = Sequential()
@@ -128,11 +143,14 @@ def trainDriver(model, X_train,y_train, epochs):
 
 import matplotlib.pyplot as plt
 def main():
+    #parameters for histograms
     plt.ion()
     bin_size = 0.1;
     min_edge = -0.95
     max_edge = 0.95
     N = 21
+
+    #selected architecture.
     NNType = 'NVidia'
     #NNType = 'MQ'
 
@@ -142,13 +160,14 @@ def main():
     trainDriver(model, X_train,y_train,5)
     model.save('model.h5')
 
+    # old comvinations of different datasets.
 
-    X_train, y_train = loadImages(DATA_PATH + "C2TN1/", 2 / 25.0)
+    #X_train, y_train = loadImages(DATA_PATH + "C2TN1/", 2 / 25.0)
     #X_train = np.concatenate([X_train, X_train2], axis=0)
     #y_train = np.concatenate([y_train, y_train2], axis=0)
     #totalLabels = np.concatenate([totalLabels, y_train], axis=0)
-    plt.hist(y_train, bin_list)
-    plt.draw()
+    #plt.hist(y_train, bin_list)
+    '''plt.draw()
     trainDriver(model, X_train, y_train, 8)
     model.save('model.h5')
     exit(0)
@@ -172,6 +191,7 @@ def main():
     plt.draw()
     trainDriver(model, X_train, y_train, 5)
     model.save('model.h5')
+    '''
 
     #show tipical complicated situations.
 
@@ -181,17 +201,6 @@ def main():
         image = cv2.imread("../IMG/" +imageName)
         prediction = model.predict(image[None, :, :, :])
         print(prediction)
-    plt.hist(totalLabels, bin_list)
-    plt.show()
-    '''X_train2, y_train2 = loadImages(DATA_PATH + "NCW1/", 2 / 10.0)
-    X_train = np.concatenate([X_train,X_train2],axis=0) 
-    y_train = np.concatenate([y_train, y_train2], axis=0)
-    X_train2, y_train2 = loadImages(DATA_PATH + "linux_sim/linux_sim/", 2 / 10.0)
-    X_train = np.concatenate([X_train, X_train2], axis=0)
-    y_train = np.concatenate([y_train, y_train2], axis=0)
-    '''
-
-
 
 
 

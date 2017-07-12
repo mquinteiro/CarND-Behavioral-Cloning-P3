@@ -95,18 +95,27 @@ go to the center. We have test several times with a very simple network to train
 different angles, as bigger is the correction faster and uncontrolled is the answers
 2. Mirroring all images and inverting the steering angels to augment situations and data.
 
+### Steering well angles.
+
+Using the side cameras helps to create scenes where correction is needed, as hi is the
+correction sharpener is the turn, so we have to achieve a equilibrium between excesive correction or not enought.
+
+The scale of in angles of the steering well is from -25º to +25, in the internal data it goes from -1 to 1. So if we want an correction on 3º we have to use 3/35 for the correction value.
+
+The final decision was 5º when training track#1 and 2º for track#2.
+
 
 ### Neural Network  Architecture.
 
 Initially we use a single dense layer with 128 neurons to test quick, but it is very
-inefficient running out everitime.
+inefficient running out everytime.
 
 After that I've try a convolutional network this architecture.
 
 | Layer | Params |
 |---|---|
-|Conv2D | kernel(6,6) deep 6, acctivation relu |
-|Conv2D | kernel(6,6) deep 6, acctivation relu |
+|Conv2D | kernel(6,6) deep 6, activation relu |
+|Conv2D | kernel(6,6) deep 6, activation relu |
 |MaxPool2D | |
 | Dropout 20%||
 |Flatten||
@@ -120,7 +129,8 @@ After that I've try a convolutional network this architecture.
 It works!!! But only in one direction, in clockwise. In anticlockwise, the default direction, the car miss the intersection and goes by the sand road. The recorded images can [see it here](https://github.com/mquinteiro/CarND-Behavioral-Cloning-P3/blob/master/CCMFdDdDdD-I.mp4)
 
 
-I can do tree tactics to avoid the problem.
+I can do three tactics to avoid the problem.
+
 Try to make more epochs (it doesn't work), make more training data with this information,
 of change the network.
 
@@ -141,7 +151,7 @@ To solve I've do more training.
 
 Because PC limitations I've do different batches of images and train in blocks.
 
-Also I have selected some images that shows how the model will fit.
+Also I have selected some images for the more dificult areas that shows how the model will fit even before testit.
 
 ![img1](./center_2017_07_09_16_00_41_503.jpg)
 
@@ -150,3 +160,21 @@ Also I have selected some images that shows how the model will fit.
 ![img1](./center_2017_07_09_16_00_49_866.jpg)
 
 ![img1](./center_2017_07_09_16_00_51_117.jpg)
+
+
+I have use several strategies to avoid **overfiting**, I always  use adam optimizer but also I have reduced the overfiting with dropouts and reducing the default adam learning rate to 0.001. At least but no least I have use validation results to determine the number of epochs to use.
+
+For example in the case of NVidia model, with dropouts, lr=0.001 and 11K images I use 5 epochs.
+
+### Achievement
+
+The final result is good. You can see the result in nvidia2trunsRun.mp4  and the saved model.h5 file. It was achieved with a training of two turns around track one. This model works in anticlockwise as well as clockwise
+
+Another ones was achieve with turns in track #2 and with and with dropouts in each layer.
+
+### Additional works
+
+I have failed to drive one full turn in the track#2. I have to test different strategies like remove side cams or test with correction angle, taking more data and adding drops
+outs to avoid over-fitting doesn't work.
+
+As a conclusion I've get more confidence with Keras libraries, but fill a bit uneasy with the fact that with the same parameters and dropouts some times works better that other, so I can't assert that the car will drive properly all the trip or in similar situations.
