@@ -103,7 +103,7 @@ inefficient running out everitime.
 
 After that I've try a convolutional network this architecture.
 
-| Layer | params |
+| Layer | Params |
 |---|---|
 |Conv2D | kernel(6,6) deep 6, acctivation relu |
 |Conv2D | kernel(6,6) deep 6, acctivation relu |
@@ -130,3 +130,23 @@ Next steeps was to try different combinations of the convolutional layers with d
 dropouts,
 
 The last try has [NVidea model proposed here](https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/)
+
+The architecture as presented by NVidia is:
+![Nvidia architecture](./cnn-architecture-768x1095.png)
+
+
+Both networks have similar behavior, and both fails in similar places.
+
+To solve I've do more training.
+
+Because PC limitations I've do different batches of images and train in blocks.
+
+Also I have selected some images that shows how the model will fit.
+
+![img1](./center_2017_07_09_16_00_41_503.jpg)
+
+![img1](./center_2017_07_09_16_00_47_672.jpg)
+
+![img1](./center_2017_07_09_16_00_49_866.jpg)
+
+![img1](./center_2017_07_09_16_00_51_117.jpg)

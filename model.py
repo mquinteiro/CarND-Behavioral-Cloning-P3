@@ -16,7 +16,7 @@ def loadImages(path,correction=0.2):
     lines = []
     images = []
     measurements = []
-    with open(DATA_PATH + 'driving_log.csv') as csvfile:
+    with open(path + 'driving_log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for line in reader:
             lines.append(line)
@@ -54,7 +54,18 @@ def loadImages(path,correction=0.2):
             images.append(np.fliplr(image3))
     return np.array(images), np.array(measurements)
 
-def defineDriver():
+def defineDriver(model='MQ'):
+    if model=='MQ' :
+        modelF = mqModel
+    elif model=='NVidia':
+        modelF = nVidiaModel
+    else:
+        print("Model "+ model + " not found")
+        exit(-1)
+
+    return modelF()
+
+def mqModel():
     print("Loading keras...")
     print("Creating the model...")
 
@@ -64,18 +75,18 @@ def defineDriver():
     model.add(Conv2D(3, (1, 1), activation='relu'))
     model.add(Dropout(0.3))
     model.add(Conv2D(6,(5,5),activation='relu'))
-    model.add(Conv2D(12,(5,5),activation='relu'))
+    model.add(Conv2D(6,(5,5),activation='relu'))
     model.add(MaxPool2D())
     #model.add(MaxPool2D())
-    model.add(Conv2D(18,(3,3),activation='relu'))
+    model.add(Conv2D(6,(3,3),activation='relu'))
     model.add(MaxPool2D())
     model.add(Dropout(0.3))
     model.add(Flatten())
 #    model.add(Dropout(0.3))
 #    model.add(Dense(128))
 #    model.add(Dropout(0.3))
-    model.add(Dense(84))
-    model.add(Dropout(0.2))
+    #model.add(Dense(84))
+    #model.add(Dropout(0.2))
     model.add(Dense(16))
     model.add(Dropout(0.2))
     model.add(Dense(1))
@@ -88,15 +99,17 @@ def nVidiaModel():
     model = Sequential()
     model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160, 320, 3)))
     model.add(Cropping2D(cropping=((50, 35), (0, 0))))
-    model.add(Convolution2D(36,(5,5), subsample=(2,2), activation='relu'))
-    model.add(Convolution2D(48,(5,5), subsample=(2,2), activation='relu'))
-    model.add(Convolution2D(64,(3,3), activation='relu'))
-    model.add(Convolution2D(64,(3,3), activation='relu'))
+    model.add(Conv2D(36,(5,5), strides=(2,2), activation='relu'))
+    model.add(Conv2D(48,(5,5), strides=(2,2), activation='relu'))
+    model.add(Conv2D(64,(3,3), activation='relu'))
+    model.add(Conv2D(64,(3,3), activation='relu'))
     model.add(Flatten())
     model.add(Dense(100))
     model.add(Dense(50))
     model.add(Dense(10))
     model.add(Dense(1))
+    model.compile(loss='mse', optimizer="adam")
+
     return model
 
 def trainDriver(model, X_train,y_train, epochs):
@@ -106,25 +119,59 @@ def trainDriver(model, X_train,y_train, epochs):
 
 import matplotlib.pyplot as plt
 def main():
+    plt.ion()
     bin_size = 0.1;
     min_edge = -0.95
     max_edge = 0.95
     N = 21
+    NNType = 'NVidia'
+    #NNType = 'MQ'
     bin_list = np.linspace(min_edge, max_edge, N + 1)
+    model = defineDriver(NNType)
+    X_train, y_train = loadImages(DATA_PATH + "C2TN1/", 5 / 25.0)
+    totalLabels = y_train
+    plt.hist(y_train, bin_list)
     plt.draw()
-    model = defineDriver()
-    X_train, y_train = loadImages(DATA_PATH + "PC1/", 5 / 25.0)
-    plt.hist(y_train, bin_list)
-    trainDriver(model, X_train,y_train,2)
-    X_train, y_train = loadImages(DATA_PATH+"2N/", 5 / 25.0)
-    plt.hist(y_train, bin_list)
-    trainDriver(model, X_train, y_train, 2)
-    X_train, y_train = loadImages(DATA_PATH + "NCW1/", 5 / 25.0)
-    trainDriver(model, X_train, y_train, 2)
-
+    trainDriver(model, X_train,y_train,5)
     model.save('model.h5')
+    X_train, y_train = loadImages(DATA_PATH + "PC1/", 5 / 25.0)
+    totalLabels = np.concatenate([totalLabels,y_train],axis=0)
+    plt.hist(y_train, bin_list)
+    trainDriver(model, X_train, y_train, 2)
+    model.save('model.h5')
+    X_train, y_train = loadImages(DATA_PATH+"2N/", 5 / 25.0)
+    totalLabels = np.concatenate([totalLabels, y_train],axis=0)
+    trainDriver(model, X_train, y_train, 2)
+    X_train, y_train = loadImages(DATA_PATH + "linux_sim/linux_sim/", 5 / 25.0)
+    totalLabels = np.concatenate([totalLabels, y_train],axis=0)
+    plt.hist(y_train, bin_list)
+    plt.draw()
+    trainDriver(model, X_train, y_train, 2)
+    model.save('model.h5')
+    X_train, y_train = loadImages(DATA_PATH + "CURVES/", 5 / 25.0)
+    totalLabels = np.concatenate([totalLabels, y_train],axis=0)
+    plt.hist(y_train, bin_list)
+    plt.draw()
+    trainDriver(model, X_train, y_train, 5)
+    model.save('model.h5')
+    X_train, y_train = loadImages(DATA_PATH + "/", 5 / 25.0)
+    totalLabels = np.concatenate([totalLabels, y_train], axis=0)
+    plt.hist(y_train, bin_list)
+    plt.draw()
+    trainDriver(model, X_train, y_train, 5)
+    model.save('model.h5')
+    #show tipical complicated situations.
+
+    testImages = ["center_2017_07_09_16_00_41_503.jpg", "center_2017_07_09_16_00_47_672.jpg","center_2017_07_09_16_00_49_866.jpg",
+                  "right_2017_07_09_16_00_51_117.jpg"]
+    for imageName in testImages:
+        image = cv2.imread("../IMG/" +imageName)
+        prediction = model.predict(image[None, :, :, :])
+        print(prediction)
+    plt.hist(totalLabels, bin_list)
+    plt.show()
     '''X_train2, y_train2 = loadImages(DATA_PATH + "NCW1/", 2 / 10.0)
-    X_train = np.concatenate([X_train,X_train2],axis=0)
+    X_train = np.concatenate([X_train,X_train2],axis=0) 
     y_train = np.concatenate([y_train, y_train2], axis=0)
     X_train2, y_train2 = loadImages(DATA_PATH + "linux_sim/linux_sim/", 2 / 10.0)
     X_train = np.concatenate([X_train, X_train2], axis=0)
