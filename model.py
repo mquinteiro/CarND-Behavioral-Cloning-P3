@@ -7,6 +7,7 @@ from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda, MaxPool2D, Cropping2D, Dropout
 from keras.layers.convolutional import Conv2D
 from keras.optimizers import Adam
+from keras.layers.normalization import BatchNormalization
 import random
 
 DATA_PATH = "/home/mquinteiro/proyectos/"
@@ -99,17 +100,25 @@ def nVidiaModel():
     model = Sequential()
     model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160, 320, 3)))
     model.add(Cropping2D(cropping=((50, 35), (0, 0))))
+    model.add(BatchNormalization())
     model.add(Conv2D(36,(5,5), strides=(2,2), activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Conv2D(48,(5,5), strides=(2,2), activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Conv2D(64,(3,3), activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Conv2D(64,(3,3), activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Flatten())
+    model.add(Dropout(0.2))
     model.add(Dense(100))
+    model.add(Dropout(0.2))
     model.add(Dense(50))
+    model.add(Dropout(0.2))
     model.add(Dense(10))
     model.add(Dense(1))
-    model.compile(loss='mse', optimizer="adam")
-
+    #model.compile(loss='mse', optimizer="adam")
+    model.compile(loss='mse', optimizer=Adam(lr=0.001))
     return model
 
 def trainDriver(model, X_train,y_train, epochs):
@@ -126,14 +135,23 @@ def main():
     N = 21
     NNType = 'NVidia'
     #NNType = 'MQ'
-    bin_list = np.linspace(min_edge, max_edge, N + 1)
+
+    # create de model
     model = defineDriver(NNType)
-    X_train, y_train = loadImages(DATA_PATH + "C2TN1/", 5 / 25.0)
-    totalLabels = y_train
-    plt.hist(y_train, bin_list)
-    plt.draw()
+    X_train, y_train = loadImages(DATA_PATH + "2Vueltas/", 5 / 25.0)
     trainDriver(model, X_train,y_train,5)
     model.save('model.h5')
+
+
+    X_train, y_train = loadImages(DATA_PATH + "C2TN1/", 2 / 25.0)
+    #X_train = np.concatenate([X_train, X_train2], axis=0)
+    #y_train = np.concatenate([y_train, y_train2], axis=0)
+    #totalLabels = np.concatenate([totalLabels, y_train], axis=0)
+    plt.hist(y_train, bin_list)
+    plt.draw()
+    trainDriver(model, X_train, y_train, 8)
+    model.save('model.h5')
+    exit(0)
     X_train, y_train = loadImages(DATA_PATH + "PC1/", 5 / 25.0)
     totalLabels = np.concatenate([totalLabels,y_train],axis=0)
     plt.hist(y_train, bin_list)
@@ -154,12 +172,7 @@ def main():
     plt.draw()
     trainDriver(model, X_train, y_train, 5)
     model.save('model.h5')
-    X_train, y_train = loadImages(DATA_PATH + "/", 5 / 25.0)
-    totalLabels = np.concatenate([totalLabels, y_train], axis=0)
-    plt.hist(y_train, bin_list)
-    plt.draw()
-    trainDriver(model, X_train, y_train, 5)
-    model.save('model.h5')
+
     #show tipical complicated situations.
 
     testImages = ["center_2017_07_09_16_00_41_503.jpg", "center_2017_07_09_16_00_47_672.jpg","center_2017_07_09_16_00_49_866.jpg",
