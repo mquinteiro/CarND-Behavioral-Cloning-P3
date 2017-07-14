@@ -1,7 +1,10 @@
 import csv
+print("Loading cv2...")
 import cv2
 import numpy as np
+print("Loading tensorflow...")
 import tensorflow as tf
+print("Loading numpy...")
 import numpy as np
 
 print("Loading keras...")
@@ -11,6 +14,7 @@ from keras.layers.convolutional import Conv2D
 from keras.optimizers import Adam
 from keras.layers.normalization import BatchNormalization
 import random
+exit(0)
 
 DATA_PATH = "/home/mquinteiro/proyectos/"
 
